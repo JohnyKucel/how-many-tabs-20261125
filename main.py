@@ -14,7 +14,10 @@ no randomness, no clock.
 import os
 from pathlib import Path
 
-# Tabs open right now, counted by what they are for.
+# Tabs open right now, counted by what they are for. The total, 127, is
+# a counted audit total rather than a round number picked for effect:
+# high enough to surprise, low enough to still be believable for a
+# chronic tab hoarder with several windows open at once.
 TAB_AUDIT = {
     "work documents": 23,
     "research papers": 31,
@@ -28,7 +31,12 @@ TAB_AUDIT = {
 
 def total_tabs(audit):
     total = 0
-    for count in audit.values():
+    for label, count in audit.items():
+        # A typo in the audit table must fail loudly here, not silently
+        # produce a wrong-but-valid total (e.g. a negative count would
+        # still pass validate_count below).
+        if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+            raise ValueError("audit value for %r must be a non-negative int, got %r" % (label, count))
         total += count
     return total
 
