@@ -33,6 +33,15 @@ def total_tabs(audit):
     return total
 
 
+def validate_count(count: int) -> str:
+    if not 1 <= count <= 99999:
+        raise ValueError("tab count must be 1-99999, got %d" % count)
+    text = str(count)
+    if not 1 <= len(text) <= 5 or not text.isdigit():
+        raise ValueError("entry must be 1-5 digits, got %r" % text)
+    return text
+
+
 def resolve_output_dir():
     raw = os.environ.get("MAKEFUN_OUTPUT_DIR", "").strip()
     if raw:
@@ -42,11 +51,14 @@ def resolve_output_dir():
 
 def write_entry():
     count = total_tabs(TAB_AUDIT)
-    text = str(count)
+    text = validate_count(count)
     out_dir = resolve_output_dir()
     out_dir.mkdir(parents=True, exist_ok=True)
     entry = out_dir / "entry.txt"
-    entry.write_bytes((text + "\n").encode("utf-8"))
+    data = (text + "\n").encode("utf-8")
+    entry.write_bytes(data)
+    if entry.read_bytes() != data:
+        raise IOError("entry.txt read-back mismatch after write")
     return entry
 
 
